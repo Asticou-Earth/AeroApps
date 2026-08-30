@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+
+#
+#  Simple python scrupt to download GEOS FP files to AWS.
+#
+
+import os
+from datetime import datetime, timedelta
+
+if __name__ == "__main__":
+
+   oneday = timedelta(days=1)
+   d = (datetime.now()-oneday).isoformat()
+   year, month, day = d[0:4], d[5:7], d[8:10]
+
+   URL = f"https://portal.nccs.nasa.gov/datashare/gmao/geos-fp/forecast/Y{year}/M{month}/D{day}/H00/"
+   outDir = f"/shared/users-local/adasilva/data/geos_fp/forecast/Y{year}/M{month}/D{day}/H00"
+
+   if os.system(f"mkdir -p {outDir}"):
+      raise ValueError(f"Could not create directory {outDir}")
+      
+   cmd = f"./download_url.sh --output {outDir} --jobs 8 --skip 8 --numFiles 32 {URL}  '*asm_Np*.nc4' "
+   print(cmd)
+   if os.system(cmd):
+      raise ValueError(f"Could not download {URL}")
+

@@ -1,0 +1,91 @@
+#
+# GIGA Traj configuration for INSPYRE trajectories.
+#
+
+# Gigatraj binaries are installed here
+# ------------------------------
+PREFIX: /shared/users-local/adasilva/local
+Verbose: True
+
+# File locations for this site
+SCRATCH: /shared/users-local/adasilva/data/SCRATCH/gigatraj
+INSPYRE: /shared/users-local/adasilva/data/INSPYRE
+
+# ----
+# Fires
+# ----
+
+Fires:
+  
+  Sinlahekin: 
+    lat: 49.03 
+    lon: -119.83 
+    altitudes_km: [10, 12, 14]
+
+  Wildhorse: 
+    lat: 43.25 
+    lon: -113.80 
+    altitudes_km: [10, 12, 14]
+
+  McConnell:
+    lat: 41.65
+    lon: -117.70
+    altitudes_km: [10, 12, 14]
+
+  Little_Giant:
+    lat: 48.10
+    lon: -120.80
+    altitudes_km: [10, 12, 14]
+
+  McCulley:
+    lat: 44.87
+    lon: -118.38
+    altitudes_km: [10, 12, 14]
+
+  Camp_Creek:
+    lat: 47.45
+    lon: -113.05
+    altitudes_km: [10, 12, 14]
+
+  Middle_Silver:
+    lat: 48.65
+    lon: -116.66
+    altitudes_km: [10, 12, 14]
+
+  Deer_Creek:
+    lat: 48.16
+    lon: -115.09
+    altitudes_km: [10, 12, 14]
+
+# ----------
+# Trajectories
+# ----------
+Parcels:
+
+  Number: 2500
+  Radius_km: 50
+  Vertical: PAlt
+  Vunits: km
+  Vdelta_km: 1
+  Format: "%o %a %v"
+  
+Trajectories: 
+
+  Duration_days: 2
+  Timestep_min: 15
+  ForecastCycle: "2026-08-28_00"
+  MetSource: MetGEOSfp 
+  VTrace: P
+  outFreq_hour: 1
+  OutFormat: "%t %T %i %o %a %v %{PAlt}m"
+  
+  Releases:
+    
+    - Start: 2026-08-29T00:00:00
+      Valid: 2026-08-30T00:00:00
+      Fires: [Sinlahekin, Wildhorse]
+
+#    - Start: 2026-08-30T00:00:00
+#      Valid: 2026-08-31T00:00:00
+#      Fires: [Sinlahekin, Camp_Creek, Middle_Silver]
+    
