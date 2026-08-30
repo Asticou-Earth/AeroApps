@@ -11,6 +11,7 @@ with open("initialize_cases.csh","w") as f:
     f.write("#!/bin/tcsh -f\n")
     for line in data:
         items = line.split()
+        print(items)
         if(items[0][0] == "#"):
             continue
         fire  = items[0]
@@ -29,8 +30,8 @@ with open("initialize_cases.csh","w") as f:
             cmd = f"./initialize_profile.csh {fire}_{time}_14km {lon} {lat} 14.\n"
             f.write(cmd)
 f.close()
-os.system("chmod 755 initialize_cases.csh")
-
+if os.system("chmod 755 initialize_cases.csh"):
+    raise PermissionError("Cannot chmod 755 initialize_cases.csh")
 
 
 # Write the run script
@@ -61,7 +62,8 @@ with open("run_cases.csh","w") as f:
     cmd = "wait"
     f.write(cmd)
 f.close()
-os.system("chmod 755 run_cases.csh")
+if os.system("chmod 755 run_cases.csh"):
+        raise PermissionError("Cannot chmod 755 run_cases.csh")
 
 # Write the plot script
 # NEW: Grab today's date to match the forecast cycle format (YYYYMMDD_00)
@@ -92,4 +94,6 @@ with open("plot_cases.csh","w") as f:
             f.write(cmd)
     f.write("\nwait\n")
 f.close()
-os.system("chmod 755 plot_cases.csh")
+if os.system("chmod 755 plot_cases.csh"):
+        raise PermissionError("Cannot chmod 755 plot_cases.csh")
+

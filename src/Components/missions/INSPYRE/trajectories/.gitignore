@@ -1,0 +1,6 @@
+# Ignore netcdf files here.
+*.nc
+
+# These are automatically generated
+*_cases.csh
+
