@@ -73,7 +73,7 @@ Trajectories:
 
   Duration_days: 2
   Timestep_min: 15
-  ForecastCycle: "2026-08-28_00"
+  ForecastCycle: "2026-08-29_00"
   MetSource: MetGEOSfp 
   VTrace: P
   outFreq_hour: 1
@@ -81,11 +81,11 @@ Trajectories:
   
   Releases:
     
-    - Start: 2026-08-29T00:00:00
-      Valid: 2026-08-30T00:00:00
+    - Start: 2026-08-30T00:00:00
+      Valid: 2026-08-31T00:00:00
       Fires: [Sinlahekin, Wildhorse]
 
-#    - Start: 2026-08-30T00:00:00
-#      Valid: 2026-08-31T00:00:00
-#      Fires: [Sinlahekin, Camp_Creek, Middle_Silver]
+    - Start: 2026-08-31T00:00:00
+      Valid: 2026-09-01T00:00:00
+      Fires: [Sinlahekin, Camp_Creek, Middle_Silver]
     
