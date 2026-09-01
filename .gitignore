@@ -200,3 +200,6 @@ cython_debug/
 
 # Aquamacs temp files
 ._*
+
+.fuse*
+.DS_Store

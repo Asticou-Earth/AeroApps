@@ -16,8 +16,8 @@ from scipy.stats import gaussian_kde
 import os
 from satellite_groundtrack import get_daytime_ground_track
 
-
-os.environ['CARTOPY_USER_BACKGROUNDS'] = "/home/pcolarco/silo/python/"
+# Move this to setup script for portability
+#ams os.environ['CARTOPY_USER_BACKGROUNDS'] = "/home/pcolarco/silo/python/"
 
 satellite_colors = {"EarthCARE": "deepskyblue","NOAA-20": "magenta", "PACE": 'green'}
 

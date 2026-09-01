@@ -1,9 +1,1 @@
-#Name                Lat   Lon     YYYY-MM-DDTHH:mm:ss  Altitude
-Sinlahekin           49.03 -119.83  2026-08-30T00:00:00  Y
-Wildhorse            43.25 -113.80  2026-08-30T00:00:00  Y
-McConnell            41.65 -117.70  2026-08-30T00:00:00  Y
-Little_Giant         48.10 -120.80  2026-08-30T00:00:00  Y
-McCulley             44.87 -118.38  2026-08-30T00:00:00  Y
-Camp_Creek           47.45 -113.05  2026-08-30T00:00:00  Y
-Middle_Silver        48.65 -116.66  2026-08-30T00:00:00  Y
-Deer_Creek           48.16 -115.09  2026-08-30T00:00:00  Y
+fire_table_2026-09-01.txt

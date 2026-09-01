@@ -1,6 +1,9 @@
-# Ignore netcdf files here.
+# Ignore netcdf and png files here.
 *.nc
+*.png
 
 # These are automatically generated
 *_cases.csh
+
+TLE
 

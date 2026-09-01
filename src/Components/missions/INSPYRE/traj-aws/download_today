@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-#  Simple python scrupt to download GEOS FP files to AWS.
+#  Simple python script to download GEOS FP files to AWS.
 #
 
 import os
@@ -19,7 +19,7 @@ if __name__ == "__main__":
    if os.system(f"mkdir -p {outDir}"):
       raise ValueError(f"Could not create directory {outDir}")
       
-   cmd = f"./download_url.sh --output {outDir} --jobs 8 --skip 7 --numFiles 33 {URL}  '*asm_Np*.nc4' "
+   cmd = f"./download_url.sh --output {outDir} --jobs 8 --skip 7 --numFiles 41 {URL}  '*asm_Np*.nc4' "
    print(cmd)
    if os.system(cmd):
       raise ValueError(f"Could not download {URL}")

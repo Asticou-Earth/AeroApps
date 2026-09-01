@@ -2,6 +2,11 @@
 from datetime import datetime, timedelta
 import os
 
+
+# Becuase some machines have limitted cores/memory we need to
+# limit the number of jobs can be run in parallel at a time.
+MaxConcurrent = 14 # max number of parallel jobs
+
 with open("fire_table.txt","r") as f:
     data = f.readlines()
 f.close()
@@ -33,7 +38,7 @@ f.close()
 if os.system("chmod 755 initialize_cases.csh"):
     raise PermissionError("Cannot chmod 755 initialize_cases.csh")
 
-
+jobs = 0
 # Write the run script
 with open("run_cases.csh","w") as f:
     f.write("#!/bin/tcsh -f\n")
@@ -52,6 +57,7 @@ with open("run_cases.csh","w") as f:
         if(alt != "Y"):
             cmd = f"./run_kinematic.csh {fire}_{time} \"{time}\" \"{time2}\" &\n"
             f.write(cmd)
+            jobs += 1
         else:
             cmd = f"./run_kinematic.csh {fire}_{time}_10km \"{time}\" \"{time2}\" &\n"
             f.write(cmd)
@@ -59,6 +65,10 @@ with open("run_cases.csh","w") as f:
             f.write(cmd)
             cmd = f"./run_kinematic.csh {fire}_{time}_14km \"{time}\" \"{time2}\" &\n"
             f.write(cmd)
+            jobs += 3
+        if jobs >= MaxConcurrent:
+            f.write("wait\n")
+            jobs = 0
     cmd = "wait"
     f.write(cmd)
 f.close()
@@ -69,6 +79,7 @@ if os.system("chmod 755 run_cases.csh"):
 # NEW: Grab today's date to match the forecast cycle format (YYYYMMDD_00)
 fcst_cycle = datetime.now().strftime("%Y%m%d_00")
 
+jobs = 0
 with open("plot_cases.csh","w") as f:
     f.write("#!/bin/tcsh -f\n")
     for line in data:
@@ -86,12 +97,17 @@ with open("plot_cases.csh","w") as f:
             # NEW: Inserted {fcst_cycle}. into the filename
             cmd = f"./plot_parcel_density.py parcel_traj.{fcst_cycle}.{fire}_{time}.nc &\n"
             f.write(cmd)
+            jobs += 1
         else:
 #            cmd = f"./plot_parcel_forecast.py parcel_traj.{fcst_cycle}.{fire}_{time} &\n"
 #            f.write(cmd)
             # NEW: Inserted {fcst_cycle}. into the filename
             cmd = f"./plot_parcel_forecast_density.py parcel_traj.{fcst_cycle}.{fire}_{time} &\n"
             f.write(cmd)
+            jobs += 1
+        if jobs >= MaxConcurrent:
+            f.write("wait\n")
+            jobs = 0
     f.write("\nwait\n")
 f.close()
 if os.system("chmod 755 plot_cases.csh"):
