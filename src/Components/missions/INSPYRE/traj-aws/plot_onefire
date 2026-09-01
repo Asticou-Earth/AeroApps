@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+"""
+ Parses command line and run and plot all releases of a single fire.
+ This is meant to be run in parallel as a separate process since Matplotlib/cartopy
+ are not exactly thread safe.
+"""
+
+if __name__ == "__main__":
+
+    import sys
+    from gigatraj import GIGATRAJ
+   
+    if len(sys.argv) != 2:
+        raise RuntimeError(f'Usage:\n                    {sys.argv[0]}  fire_name')
+    
+    fire = sys.argv[1]
+
+    gt = GIGATRAJ()
+    gt.plotTrajectories(fire=fire)
+

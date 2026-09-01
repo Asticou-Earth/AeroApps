@@ -226,6 +226,11 @@ Fires:
     lon: -96.12
     altitudes_km: [10, 12, 14]
 
+  DeepCreek:
+    lat: 43.948055
+    lon: -122.425835
+    altitudes_km: [10, 12, 14]
+    
 # ------------
 # Trajectories
 # ------------
@@ -240,13 +245,13 @@ Parcels:
   
 Trajectories: 
 
-  DryRun: True
-  MaxConcurrent: 0
+  DryRun: False
+  MaxConcurrent: 14
 
   Duration_days: 3 
   Timestep_min: 15
   
-  ForecastCycle: "20260831_00"
+  ForecastCycle: "20260901_00"
   MetSource: MetGEOSfp 
   VTrace: P
   outFreq_hour: 1
@@ -254,11 +259,25 @@ Trajectories:
   
   Releases:
     
-    - Start: 2026-09-01T00:00:00
-      Fires: [Plaskett, Ross]
-
     - Start: 2026-09-02T00:00:00
-      Fires: [Plaskett,Mount_Emma]
+      Fires: 
+        - McCully
+        - Plaskett
+        - Grotto
+        - LITTLE_GIANT
+        - CROOKED
+        - McConnell
+        - DeepCreek
+
+    - Start: 2026-09-03T00:00:00
+      Fires:
+        - McCully
+        - Plaskett
+        - Grotto
+        - LITTLE_GIANT
+        - CROOKED
+        - McConnell
+        - DeepCreek
 
 Plots:
     CampaignFile: inspyre.yaml    

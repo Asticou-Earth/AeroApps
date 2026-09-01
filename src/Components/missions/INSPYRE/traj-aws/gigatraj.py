@@ -100,7 +100,7 @@ class GIGATRAJ(object):
             source = T['MetSource']
             MetSpec = f"ModelRun={T['ForecastCycle']}"
 
-            dirname = f"{cf['INSPYRE']}/{T['ForecastCycle']}"
+            dirname = f"{cf['INSPYRE']}/data/{T['ForecastCycle']}"
             if os.system(f"mkdir -p {dirname}"):
                 raise TRAJError(f"Could not create directory {dirname}")
 
@@ -174,7 +174,7 @@ class GIGATRAJ(object):
             for s in list(myFiles.keys()):
                  for f in list(myFiles[s].keys()):
                      if f != fire:
-                         print(f"Dropping <{f}>")
+                         #print(f"Dropping <{f}>")
                          del myFiles[s][f] # drop this fire
                          del myAlts[s][f]  # drop this fire
 
@@ -267,6 +267,10 @@ class GIGATRAJ(object):
 
         cf, T = self.cf, self.cf['Trajectories']
         
+        dirname = f"{cf['INSPYRE']}/images/{T['ForecastCycle']}"
+        if os.system(f"mkdir -p {dirname}"):
+            raise TRAJError(f"Could not create directory {dirname}")
+          
         # Get a list of files associated with this run
         # --------------------------------------------
         myFiles, myAlts = self._listTrajFiles(start,fire)
@@ -294,7 +298,6 @@ class GIGATRAJ(object):
  
                 fig, _ = plot_traj (Traj, ValidTime, CampaignFile, satellites=None)
 
-                dirname = f"{cf['INSPYRE']}/images/{T['ForecastCycle']}"
                 img_file = f"{dirname}/parcel_traj.density.{f}.{t0}+{tv}.png"
                 if cf['Verbose']:
                     print(f"[] Saving image {img_file}") 
@@ -316,7 +319,8 @@ def run_cmd(cmd):
                             check=True)
     return cmd, result.stdout
 
-#-----
+#--------------------------------------------------------------------------------
+
 if __name__ == "__main__":
 
     gt = GIGATRAJ()

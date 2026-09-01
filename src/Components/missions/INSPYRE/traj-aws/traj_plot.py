@@ -434,10 +434,12 @@ def _make_axes(
         map_axis.add_feature(cfeature.LAND, facecolor="0.9", zorder=0)
         map_axis.add_feature(cfeature.OCEAN, facecolor="lightblue", zorder=0)
 
-    map_axis.set_title(
-        f"Fire: {fire_name}  Release Time: {release_time.isoformat(timespec='minutes')}  "
-        f"Valid Time: {valid_time.isoformat(timespec='minutes')}",
-        fontsize=24,
+    figure.suptitle(
+        f"Fire: {fire_name}  Release: {release_time.isoformat(timespec='hours')}  "
+        f"Valid: {valid_time.isoformat(timespec='hours')}",
+        fontsize=28,
+        fontweight="bold",
+        y=0.965,
     )
 
     # Campaign markers are numbered in YAML insertion order, matching the
@@ -543,4 +545,3 @@ def plot_traj (Traj, ValidTime, CampaignFile='inspyre.yaml', satellites=None):
         _add_satellite_tracks(map_axis, satellite_names, valid_time)
 
     return figure, (map_axis, altitude_axis)
-
