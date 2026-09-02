@@ -41,6 +41,12 @@ class GIGATRAJ(object):
             self.cf = yaml.safe_load(stream)
 
         self.Verbose = self.cf['Verbose']
+
+        # Process defaults
+        # ----------------
+        if self.cf['Trajectories']['ForecastCycle'] == 'today' :
+            self.cf['Trajectories']['ForecastCycle'] = \
+                str(datetime.now().date()).replace('-','')+'_00'
             
     def genParcels(self):
         """
@@ -274,6 +280,11 @@ class GIGATRAJ(object):
         # Get a list of files associated with this run
         # --------------------------------------------
         myFiles, myAlts = self._listTrajFiles(start,fire)
+
+
+        # Bounding box
+        # ------------
+        bbox = cf['Plots']['BoundingBox']
         
         # Loop over and plot
         # ------------------
@@ -296,7 +307,7 @@ class GIGATRAJ(object):
                 ValidTime = StartTime + dt
                 t0, tv = StartTime.isoformat()[:-3], ValidTime.isoformat()[:-3], 
  
-                fig, _ = plot_traj (Traj, ValidTime, CampaignFile, satellites=None)
+                fig, _ = plot_traj (Traj, ValidTime, CampaignFile, satellites=None,geographic_bounds=bbox)
 
                 img_file = f"{dirname}/parcel_traj.density.{f}.{t0}+{tv}.png"
                 if cf['Verbose']:

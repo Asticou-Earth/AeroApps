@@ -231,7 +231,7 @@ Fires:
     lon: -122.425835
     altitudes_km: [10, 12, 14]
 
-  Siberia_003:
+  Siberia3:
     lat: 65.
     lon: 116
     altitudes_km: [10, 12, 14]
@@ -266,12 +266,27 @@ Trajectories:
     
     - Start: 2026-09-02T00:10:00
       Fires: 
-        - Siberia_003
+        - McCully
+        - Plaskett
+        - Grotto
+        - LITTLE_GIANT
+        - CROOKED
+        - McConnell
+        - DeepCreek
+
+    - Start: 2026-09-03T00:00:00
+      Fires:
+        - McCully
+        - Plaskett
+        - Grotto
+        - LITTLE_GIANT
+        - CROOKED
+        - McConnell
+        - DeepCreek
 
 Plots:
     CampaignFile: inspyre.yaml    
-    Density_timestep_hours: 11    # hours from start for density plots
+    Density_timestep_hours: 21    # hours from start for density plots
     Satellites: None
     Image_dpi: 100
-    BoundingBox: [22., -155, 25, 80]  # [east, west, south, north]
     

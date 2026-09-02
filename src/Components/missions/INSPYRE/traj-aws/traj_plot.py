@@ -1,6 +1,6 @@
 """
 Plot parcel trajectory forecasts from in-memory xarray datasets. This is a refactoring
-of these packages by Pete COlarco and others:
+of these packages by Pete Colarco and others:
 
 - plot_parcel_forecast_density.py
 - traj_make_plot.py
@@ -59,6 +59,7 @@ _FALLBACK_SATELLITE_COLORS = (
     "tab:brown",
     "tab:pink",
 )
+DEFAULT_GEOGRAPHIC_BOUNDS = (-120.0, -70.0, 22.5, 60.0)
 
 
 def _as_utc_naive(value: datetime, name: str) -> datetime:
@@ -79,6 +80,38 @@ def _altitude_km(dataset: xr.Dataset) -> float:
     if not np.isfinite(altitude):
         raise ValueError("attrs['altitude_km'] must be finite")
     return altitude
+
+
+def _validated_geographic_bounds(geographic_bounds):
+    if not isinstance(geographic_bounds, Sequence) or isinstance(
+        geographic_bounds, (str, bytes)
+    ):
+        raise TypeError(
+            "geographic_bounds must be a sequence of "
+            "[west, east, south, north]"
+        )
+    if len(geographic_bounds) != 4:
+        raise ValueError(
+            "geographic_bounds must contain exactly four values: "
+            "[west, east, south, north]"
+        )
+    try:
+        west, east, south, north = map(float, geographic_bounds)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("geographic_bounds values must be numeric") from exc
+    if not all(np.isfinite(value) for value in (west, east, south, north)):
+        raise ValueError("geographic_bounds values must be finite")
+    if not (-180.0 <= west <= 180.0 and -180.0 <= east <= 180.0):
+        raise ValueError(
+            "west and east must each be between -180 and 180 degrees"
+        )
+    if west == east:
+        raise ValueError("west and east must not be equal")
+    if not (-90.0 <= south < north <= 90.0):
+        raise ValueError(
+            "geographic_bounds must satisfy -90 <= south < north <= 90"
+        )
+    return west, east, south, north
 
 
 def _trajectory_arrays(dataset: xr.Dataset):
@@ -293,7 +326,24 @@ def _validated_satellites(satellites):
     return names
 
 
-def _add_satellite_tracks(ax, satellites, valid_time):
+def _inside_geographic_bounds(longitude, latitude, geographic_bounds):
+    west, east, south, north = geographic_bounds
+    longitude = (longitude + 180.0) % 360.0 - 180.0
+    if west < east:
+        inside_longitude = (longitude >= west) & (longitude <= east)
+    else:
+        # A decreasing west/east pair denotes an antimeridian-crossing box.
+        inside_longitude = (longitude >= west) | (longitude <= east)
+    return (
+        np.isfinite(longitude)
+        & np.isfinite(latitude)
+        & inside_longitude
+        & (latitude >= south)
+        & (latitude <= north)
+    )
+
+
+def _add_satellite_tracks(ax, satellites, valid_time, geographic_bounds):
     day_start = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
     day_stop = day_start + timedelta(days=1)
     fallback_colors = cycle(_FALLBACK_SATELLITE_COLORS)
@@ -341,14 +391,10 @@ def _add_satellite_tracks(ax, satellites, valid_time):
         marker_latitude = track.latitude[marker_mask]
         times = track.times[marker_mask]
 
-        lon_min, lon_max, lat_min, lat_max = ax.get_extent(crs=ccrs.PlateCarree())
-        inside_map = (
-            np.isfinite(marker_longitude)
-            & np.isfinite(marker_latitude)
-            & (marker_longitude >= lon_min)
-            & (marker_longitude <= lon_max)
-            & (marker_latitude >= lat_min)
-            & (marker_latitude <= lat_max)
+        inside_map = _inside_geographic_bounds(
+            marker_longitude,
+            marker_latitude,
+            geographic_bounds,
         )
         marker_longitude = marker_longitude[inside_map]
         marker_latitude = marker_latitude[inside_map]
@@ -405,14 +451,39 @@ def _make_axes(
     fire_name: str,
     markers,
     aircraft,
+    geographic_bounds,
 ):
-    projection = ccrs.LambertConformal(central_longitude=-100, central_latitude=40)
+    west, east, south, north = geographic_bounds
+    crosses_antimeridian = west > east
+    if geographic_bounds == DEFAULT_GEOGRAPHIC_BOUNDS:
+        central_longitude = -100.0
+        central_latitude = 40.0
+    else:
+        unwrapped_east = east + 360.0 if crosses_antimeridian else east
+        central_longitude = (west + unwrapped_east) / 2.0
+        if central_longitude > 180.0:
+            central_longitude -= 360.0
+        central_latitude = (south + north) / 2.0
+
+    projection = ccrs.LambertConformal(
+        central_longitude=central_longitude,
+        central_latitude=central_latitude,
+    )
     figure = plt.figure(figsize=(16, 20))
     grid = GridSpec(2, 1, height_ratios=[3.5, 1], figure=figure)
     figure.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95, hspace=0.02)
 
     map_axis = figure.add_subplot(grid[0], projection=projection)
-    map_axis.set_extent([-120, -70, 22.5, 60], crs=ccrs.PlateCarree())
+    if crosses_antimeridian:
+        extent_crs = ccrs.PlateCarree(central_longitude=180.0)
+        shifted_west = west - 180.0
+        shifted_east = east + 180.0
+        map_axis.set_extent(
+            (shifted_west, shifted_east, south, north),
+            crs=extent_crs,
+        )
+    else:
+        map_axis.set_extent(geographic_bounds, crs=ccrs.PlateCarree())
     map_axis.coastlines(resolution="50m", zorder=100)
     map_axis.gridlines(
         draw_labels=True, dms=True, x_inline=False, y_inline=False,
@@ -474,7 +545,13 @@ def _make_axes(
     return figure, map_axis, altitude_axis
 
 
-def plot_traj (Traj, ValidTime, CampaignFile='inspyre.yaml', satellites=None):
+def plot_traj(
+    Traj,
+    ValidTime,
+    CampaignFile="inspyre.yaml",
+    satellites=None,
+    geographic_bounds=DEFAULT_GEOGRAPHIC_BOUNDS,
+):
     """Create one parcel-trajectory density plot.
 
     Parameters
@@ -498,6 +575,11 @@ def plot_traj (Traj, ValidTime, CampaignFile='inspyre.yaml', satellites=None):
         Named satellites whose daytime ground tracks should be added for the
         UTC day containing ``ValidTime``. If None, no orbit data are acquired
         or plotted.
+    geographic_bounds : sequence of four numbers, optional
+        Map extent in ``[west, east, south, north]`` degrees. The default is
+        ``(-120, -70, 22.5, 60)``, matching the original plot. A west value
+        greater than east denotes a box crossing the antimeridian; for example,
+        ``(22, -155, 40, 80)`` runs eastward from 22 E to 155 W.
 
     Returns
     -------
@@ -512,12 +594,18 @@ def plot_traj (Traj, ValidTime, CampaignFile='inspyre.yaml', satellites=None):
 
     valid_time = _as_utc_naive(ValidTime, "ValidTime")
     satellite_names = _validated_satellites(satellites)
+    geographic_bounds = _validated_geographic_bounds(geographic_bounds)
     datasets = _sorted_release_datasets(Traj)
     release_time = _release_time(datasets)
     fire_name = _fire_name(datasets)
     _, markers, aircraft = _load_campaign(CampaignFile)
     figure, map_axis, altitude_axis = _make_axes(
-        release_time, valid_time, fire_name, markers, aircraft
+        release_time,
+        valid_time,
+        fire_name,
+        markers,
+        aircraft,
+        geographic_bounds,
     )
 
     window_start = np.datetime64(valid_time - timedelta(hours=1), "us")
@@ -542,6 +630,11 @@ def plot_traj (Traj, ValidTime, CampaignFile='inspyre.yaml', satellites=None):
             altitude_axis.plot(times, altitude[:, parcel_index], color=line_color)
 
     if satellite_names:
-        _add_satellite_tracks(map_axis, satellite_names, valid_time)
+        _add_satellite_tracks(
+            map_axis,
+            satellite_names,
+            valid_time,
+            geographic_bounds,
+        )
 
     return figure, (map_axis, altitude_axis)

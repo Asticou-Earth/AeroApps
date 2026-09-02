@@ -30,6 +30,7 @@ import requests
 from sgp4.api import SGP4_ERRORS, Satrec
 from sgp4.conveniences import sat_epoch_datetime
 
+from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 CELESTRAK_GP_URL = "https://celestrak.org/NORAD/elements/gp.php"
@@ -398,6 +399,31 @@ def main(argv: Sequence[str] | None = None) -> int:
     write_ground_track_csv(args.output, track)
     LOGGER.info("Wrote %d samples to %s", track.times.size, args.output)
     return 0
+
+def refresh_all_tles(tle_directory: str | Path = "TLE") -> None:
+    tle_directory = Path(tle_directory)
+    failures = []
+
+    for satellite_name, norad_id in SATELLITES.items():
+        try:
+            tle = acquire_tle(
+                norad_id,
+                cache_directory=tle_directory,
+                force_download=True,
+            )
+
+            print(
+                f"Refreshed {satellite_name}: "
+                f"NORAD {norad_id}, epoch {tle.epoch.isoformat()}"
+            )
+
+        except Exception as error:
+            failures.append((satellite_name, error))
+            print(f"Failed to refresh {satellite_name}: {error}")
+
+    if failures:
+        names = ", ".join(name for name, _ in failures)
+        raise RuntimeError(f"Failed to refresh TLEs for: {names}")
 
 
 if __name__ == "__main__":
