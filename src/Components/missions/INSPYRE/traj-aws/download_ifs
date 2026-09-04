@@ -129,12 +129,12 @@ if __name__ == "__main__":
 
    # Serial download
    # ---------------
-   Cmd_cdo, Cmd_nco, Cmd_del = serial_download(time,back,dt_,dry_run=False)
+   Cmd_cdo, Cmd_nco, Cmd_del = serial_download(time,back,dt_,dry_run=True)
 
    # Parallel netcdf convert
    # -----------------------
    dry_run = True
-   parallel_execute(Cmd_cdo,dry_run) # Convert GRIB2 to netcdf
+   parallel_execute(Cmd_cdo,dry_run=False) # Convert GRIB2 to netcdf
    parallel_execute(Cmd_nco,dry_run) # Fix units, lev and time variables
 
    # Clean up GRIB2 and temporary files

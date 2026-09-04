@@ -55,7 +55,7 @@ class GIGATRAJ(object):
         if self.cf['Plots']['BoundingBox'] == 'siberia':
             self.cf['Plots']['BoundingBox'] = (22.,-155,25,80)
         elif self.cf['Plots']['BoundingBox'] == 'siberia2':
-            self.cf['Plots']['BoundingBox'] = (60.,-100,35,85)
+            self.cf['Plots']['BoundingBox'] = (100.,-100,35,85)
         elif self.cf['Plots']['BoundingBox'] == 'north_america':
             self.cf['Plots']['BoundingBox'] = (-120.0,-70.0,22.5,60.0)
         elif self.cf['Plots']['BoundingBox'] == 'north_america2':

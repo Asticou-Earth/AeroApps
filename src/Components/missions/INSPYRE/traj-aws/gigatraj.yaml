@@ -236,6 +236,21 @@ Fires:
     lon: 116
     altitudes_km: [10, 12, 14]
     
+  Siberia_003a:
+    lat: 64.
+    lon: 116
+    altitudes_km: [12, 12.5, 13]
+    
+  Siberia_003b:
+    lat: 64.
+    lon: 116
+    altitudes_km: [12, 12.5, 13]
+
+  Siberia_003c:
+    lat: 64.
+    lon: 116
+    altitudes_km: [12, 12.5, 13]
+    
 # ------------
 # Trajectories
 # ------------
@@ -252,14 +267,21 @@ Trajectories:
 
   DryRun: False
   #MaxConcurrent: 14
-  MaxConcurrent: 14
+  MaxConcurrent: 3
 
-  #Duration_days: 8 
-  Duration_days: 3 
+  Duration_days: 7 
   Timestep_min: 15
+
+  # Notes:
+  # MetProduct: The specific product to be used for met fields.
+  #             Examples: GEOSfp, IFS
+  # MetSource:  A generic name for gigatraj. Notice that there
+  #             specific versions of GEOSfp.cat for each product.
+  MetProduct: GEOSfp # GEOSfp, IFS
+  MetSource: MetGEOSfp
+
   
-  ForecastCycle: "20260903_00" # e.g. "20260901_00" if today, today at 0Z
-  MetSource: MetGEOSfp 
+  ForecastCycle: today    # e.g. "20260901_00" if today, today at 0Z
   #MetSource: MetIFS
   VTrace: P
   outFreq_hour: 1
@@ -267,9 +289,11 @@ Trajectories:
   
   Releases:
     
-    - Start: 2026-09-04T00:00:00
+    - Start: 2026-09-04T04:00:00
       Fires: 
-        - Sinlahekin
+        - Siberia_003a
+        - Siberia_003b
+        - Siberia_003c
 
     #- Start: 2026-09-02T10:00:00
     #  Fires: 
@@ -277,8 +301,8 @@ Trajectories:
 
 Plots:
     CampaignFile: inspyre.yaml    
-    Density_timestep_hours: 44    # 179, hours from start for density plots
+    Density_timestep_hours: 141    # 179, hours from start for density plots
     Satellites: [EarthCARE,]
     Image_dpi: 100
-    BoundingBox: north_america2 # [east, west, south, north] or siberia, north_america
+    BoundingBox: siberia2 # [east, west, south, north] or siberia, north_america
     
