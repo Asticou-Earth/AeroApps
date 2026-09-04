@@ -60,6 +60,7 @@ _FALLBACK_SATELLITE_COLORS = (
     "tab:pink",
 )
 DEFAULT_GEOGRAPHIC_BOUNDS = (-120.0, -70.0, 22.5, 60.0)
+_SATELLITE_FILTERS = {"day_only", "night_only", None}
 
 
 def _as_utc_naive(value: datetime, name: str) -> datetime:
@@ -326,6 +327,14 @@ def _validated_satellites(satellites):
     return names
 
 
+def _validated_satellite_filter(satellite_filter):
+    if satellite_filter not in _SATELLITE_FILTERS:
+        raise ValueError(
+            "satellite_filter must be 'day_only', 'night_only', or None"
+        )
+    return satellite_filter
+
+
 def _inside_geographic_bounds(longitude, latitude, geographic_bounds):
     west, east, south, north = geographic_bounds
     longitude = (longitude + 180.0) % 360.0 - 180.0
@@ -343,7 +352,13 @@ def _inside_geographic_bounds(longitude, latitude, geographic_bounds):
     )
 
 
-def _add_satellite_tracks(ax, satellites, valid_time, geographic_bounds):
+def _add_satellite_tracks(
+    ax,
+    satellites,
+    valid_time,
+    geographic_bounds,
+    satellite_filter,
+):
     day_start = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
     day_stop = day_start + timedelta(days=1)
     fallback_colors = cycle(_FALLBACK_SATELLITE_COLORS)
@@ -361,15 +376,31 @@ def _add_satellite_tracks(ax, satellites, valid_time, geographic_bounds):
         )
         daylight = classify_daylight(track, minimum_solar_elevation=0.0)
 
-        daytime_latitude = np.where(daylight.daytime, track.latitude, np.nan)
-        daytime_longitude = np.where(daylight.daytime, track.longitude, np.nan)
-        longitude_jumps = np.abs(np.diff(daytime_longitude)) > 180.0
-        daytime_latitude[1:][longitude_jumps] = np.nan
-        daytime_longitude[1:][longitude_jumps] = np.nan
+        valid_track = (
+            track.successful
+            & np.isfinite(track.latitude)
+            & np.isfinite(track.longitude)
+        )
+        if satellite_filter == "day_only":
+            selected = valid_track & daylight.daytime
+        elif satellite_filter == "night_only":
+            selected = (
+                valid_track
+                & np.isfinite(daylight.solar_elevation)
+                & ~daylight.daytime
+            )
+        else:
+            selected = valid_track
+
+        plotted_latitude = np.where(selected, track.latitude, np.nan)
+        plotted_longitude = np.where(selected, track.longitude, np.nan)
+        longitude_jumps = np.abs(np.diff(plotted_longitude)) > 180.0
+        plotted_latitude[1:][longitude_jumps] = np.nan
+        plotted_longitude[1:][longitude_jumps] = np.nan
 
         line, = ax.plot(
-            daytime_longitude,
-            daytime_latitude,
+            plotted_longitude,
+            plotted_latitude,
             color=color,
             linewidth=3,
             transform=ccrs.PlateCarree(),
@@ -386,7 +417,7 @@ def _add_satellite_tracks(ax, satellites, valid_time, geographic_bounds):
             ],
             dtype=bool,
         )
-        marker_mask = daylight.daytime & marker_times
+        marker_mask = selected & marker_times
         marker_longitude = track.longitude[marker_mask]
         marker_latitude = track.latitude[marker_mask]
         times = track.times[marker_mask]
@@ -551,6 +582,7 @@ def plot_traj(
     CampaignFile="inspyre.yaml",
     satellites=None,
     geographic_bounds=DEFAULT_GEOGRAPHIC_BOUNDS,
+    satellite_filter="day_only",
 ):
     """Create one parcel-trajectory density plot.
 
@@ -580,6 +612,10 @@ def plot_traj(
         ``(-120, -70, 22.5, 60)``, matching the original plot. A west value
         greater than east denotes a box crossing the antimeridian; for example,
         ``(22, -155, 40, 80)`` runs eastward from 22 E to 155 W.
+    satellite_filter : {"day_only", "night_only", None}, optional
+        Select which portions of satellite ground tracks to plot. The default
+        is ``"day_only"``. Use ``"night_only"`` for nighttime subpoints or
+        ``None`` to apply no solar-elevation filter.
 
     Returns
     -------
@@ -595,6 +631,7 @@ def plot_traj(
     valid_time = _as_utc_naive(ValidTime, "ValidTime")
     satellite_names = _validated_satellites(satellites)
     geographic_bounds = _validated_geographic_bounds(geographic_bounds)
+    satellite_filter = _validated_satellite_filter(satellite_filter)
     datasets = _sorted_release_datasets(Traj)
     release_time = _release_time(datasets)
     fire_name = _fire_name(datasets)
@@ -635,6 +672,7 @@ def plot_traj(
             satellite_names,
             valid_time,
             geographic_bounds,
+            satellite_filter,
         )
 
     return figure, (map_axis, altitude_axis)

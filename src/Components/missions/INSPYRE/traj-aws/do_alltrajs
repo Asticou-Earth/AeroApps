@@ -11,8 +11,8 @@ import subprocess
 
 def plot_allfires(gt):
     """
-    Plots all fires in parallel as separate processes since Matplotlib/cartopy
-    are not exactly thread safe.
+    Plots all fires in parallel as separate processes since
+    Matplotlib/cartopy are not exactly thread safe.
     """
 
     # Get a list of fires

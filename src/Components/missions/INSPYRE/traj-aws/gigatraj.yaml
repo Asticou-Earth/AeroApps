@@ -251,27 +251,34 @@ Parcels:
 Trajectories: 
 
   DryRun: False
+  #MaxConcurrent: 14
   MaxConcurrent: 14
 
+  #Duration_days: 8 
   Duration_days: 3 
   Timestep_min: 15
   
-  ForecastCycle: today # e.g. "20260901_00" if today, today at 0Z
+  ForecastCycle: "20260903_00" # e.g. "20260901_00" if today, today at 0Z
   MetSource: MetGEOSfp 
+  #MetSource: MetIFS
   VTrace: P
   outFreq_hour: 1
   OutFormat: "%t %T %i %o %a %v %{PAlt}m"
   
   Releases:
     
-    - Start: 2026-09-02T00:10:00
+    - Start: 2026-09-04T00:00:00
       Fires: 
-        - Siberia_003
+        - Sinlahekin
+
+    #- Start: 2026-09-02T10:00:00
+    #  Fires: 
+    #    - Siberia_003
 
 Plots:
     CampaignFile: inspyre.yaml    
-    Density_timestep_hours: 11    # hours from start for density plots
-    Satellites: None
+    Density_timestep_hours: 44    # 179, hours from start for density plots
+    Satellites: [EarthCARE,]
     Image_dpi: 100
-    BoundingBox: [22., -155, 25, 80]  # [east, west, south, north]
+    BoundingBox: north_america2 # [east, west, south, north] or siberia, north_america
     

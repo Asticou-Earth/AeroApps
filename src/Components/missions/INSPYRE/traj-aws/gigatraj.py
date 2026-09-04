@@ -8,6 +8,8 @@ in a separate yaml file, e.g., "inspyre.yaml".
 
   Arlindo da Silva, August 2026 
 
+  (c) 2026 Asticou Earth Systems, LLC
+
 """
 
 import os
@@ -42,11 +44,22 @@ class GIGATRAJ(object):
 
         self.Verbose = self.cf['Verbose']
 
-        # Process defaults
-        # ----------------
+        # Forecast cycle default
+        # ----------------------
         if self.cf['Trajectories']['ForecastCycle'] == 'today' :
             self.cf['Trajectories']['ForecastCycle'] = \
                 str(datetime.now().date()).replace('-','')+'_00'
+
+        # Map region
+        # ----------
+        if self.cf['Plots']['BoundingBox'] == 'siberia':
+            self.cf['Plots']['BoundingBox'] = (22.,-155,25,80)
+        elif self.cf['Plots']['BoundingBox'] == 'siberia2':
+            self.cf['Plots']['BoundingBox'] = (60.,-100,35,85)
+        elif self.cf['Plots']['BoundingBox'] == 'north_america':
+            self.cf['Plots']['BoundingBox'] = (-120.0,-70.0,22.5,60.0)
+        elif self.cf['Plots']['BoundingBox'] == 'north_america2':
+            self.cf['Plots']['BoundingBox'] = (-125.0,-70.0,22.5,60.0)
             
     def genParcels(self):
         """
@@ -106,7 +119,7 @@ class GIGATRAJ(object):
             source = T['MetSource']
             MetSpec = f"ModelRun={T['ForecastCycle']}"
 
-            dirname = f"{cf['INSPYRE']}/data/{T['ForecastCycle']}"
+            dirname = f"{cf['INSPYRE']}/{source}/data/{T['ForecastCycle']}"
             if os.system(f"mkdir -p {dirname}"):
                 raise TRAJError(f"Could not create directory {dirname}")
 
@@ -145,6 +158,8 @@ class GIGATRAJ(object):
         
         cf, F, P, T = self.cf, self.cf['Fires'], self.cf['Parcels'], self.cf['Trajectories']
 
+        source = T['MetSource']
+        
         # Loop over parcel releases
         # -------------------------
         for R in cf['Trajectories']['Releases']:
@@ -153,7 +168,7 @@ class GIGATRAJ(object):
 
             myFiles[s] = dict()
             myAlts[s] = dict()
-            dirname = f"{cf['INSPYRE']}/data/{T['ForecastCycle']}"
+            dirname = f"{cf['INSPYRE']}/{source}/data/{T['ForecastCycle']}"
 
             # For each file
             # -------------
@@ -272,8 +287,10 @@ class GIGATRAJ(object):
         from traj_plot import plot_traj
 
         cf, T = self.cf, self.cf['Trajectories']
+
+        source = T['MetSource']
         
-        dirname = f"{cf['INSPYRE']}/images/{T['ForecastCycle']}"
+        dirname = f"{cf['INSPYRE']}/{source}/images/{T['ForecastCycle']}"
         if os.system(f"mkdir -p {dirname}"):
             raise TRAJError(f"Could not create directory {dirname}")
           
@@ -285,6 +302,7 @@ class GIGATRAJ(object):
         # Bounding box
         # ------------
         bbox = cf['Plots']['BoundingBox']
+        sats = cf['Plots']['Satellites']
         
         # Loop over and plot
         # ------------------
@@ -307,7 +325,9 @@ class GIGATRAJ(object):
                 ValidTime = StartTime + dt
                 t0, tv = StartTime.isoformat()[:-3], ValidTime.isoformat()[:-3], 
  
-                fig, _ = plot_traj (Traj, ValidTime, CampaignFile, satellites=None,geographic_bounds=bbox)
+                fig, _ = plot_traj (Traj, ValidTime, CampaignFile,
+                                    satellites=sats,
+                                    geographic_bounds=bbox)
 
                 img_file = f"{dirname}/parcel_traj.density.{f}.{t0}+{tv}.png"
                 if cf['Verbose']:
@@ -329,6 +349,52 @@ def run_cmd(cmd):
                             capture_output=True,
                             check=True)
     return cmd, result.stdout
+
+def parallel_execute(Cmd,dry_run=False,maxConcurrent=None):
+    """
+    Run list of commands in Cmd in parallel with ThreadPools.
+    """
+
+    # Dry run
+    # -------
+    if dry_run:
+        for cmd in Cmd:
+            print(cmd)
+    return
+
+    if maxConcurrent is None:
+        gt = GIGATRAJ()
+        maxConcurrent = gt.cf['Trajectories']['MaxConcurrent']
+
+    # Serial Run without ThreadPools
+    # ------------------------------
+    if maxConcurrent == 0:
+        for cmd in Cmd:
+            print(cmd+'\n')
+            if os.system(cmd):
+                print(f"*** Error running {cmd} ***")
+        return
+    
+    # Normal Concurrent Run
+    # ---------------------
+    with ThreadPoolExecutor(max_workers=maxConcurrent) as executor:
+
+        futures = [executor.submit(run_cmd, cmd) for cmd in Cmd]
+
+        for future in as_completed(futures):
+
+            try:
+                cmd, stdOut = future.result()
+                if gt.Verbose:
+                    print('[] '+cmd,'\n',stdOut)
+
+            except subprocess.CalledProcessError as error:
+                print(f"Command failed: {error}")
+
+            except Exception as error:
+                print(f"Unexpected error: {error}")
+
+    print("Parallel execution completed.")
 
 #--------------------------------------------------------------------------------
 
