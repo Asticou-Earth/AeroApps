@@ -1,6 +1,6 @@
 # GigaTraj Python Interface
 
-This directory has modules implenmentating a Python interface to the C++ trajectory code ``GigaTraj`` developed by Leslie Lait . Although many of the code here is general purpose, what you find below is motivated by use cases encountered during NASA's [INSPYRE](https://www-air.larc.nasa.gov/missions/inspyre/index.html) airborne campaign. Some basic clean up is necessary before this becomes a truly general purpose Python interface to ``GigaTraj``.
+This directory has modules implementating a Python interface to the C++ trajectory code ``GigaTraj`` developed by Leslie Lait . Although much of the code here is general purpose, what you find below is motivated by use cases encountered during NASA's [INSPYRE](https://www-air.larc.nasa.gov/missions/inspyre/index.html) airborne campaign. Some basic clean up is necessary before this becomes a truly general purpose Python interface to ``GigaTraj``.
 
 ## About  ``GigaTraj`` C++ Library and Application
 
@@ -15,29 +15,29 @@ Please note that ``GigaTraj`` is not a general Lagrangian transport model. It do
 ## Main module and configuration
 
 
-- ``gigatraj.py:`` Defines the main class GIGATRAJ with methods for generating parcel initial locations and actually running the ``gigatraj`` C++ code. By design, this class does not write any files and does not include any visualization functionality. Notice that `GigaTraj` C++ applications invoked internally do write NetCDF files. Therefore, methods such as ``genParcel()`` and ``genTrajectories`` produce NetCDF file output.
+- ``gigatraj.py:`` Defines the main class GIGATRAJ with methods for generating parcel initial locations and actually running the ``gigatraj`` C++ code. By design, this class does not write any files and does not include any visualization functionality. Notice that the `GigaTraj` C++ applications invoked internally do write NetCDF files. Therefore, methods such as ``genParcel()`` and ``genTrajectories`` produce NetCDF file output.
 
 - ``gigatraj.yaml:`` This is the main YAML configuration driving the executionn of ``GigaTraj``. The main sections are:
 
-  * ``Fires:`` define the sites where to launch trajectories from (refered to as **fires**, an INSPYRE bias). Probably this should be renamed ``Sites``.
-  * ``Parcels:`` where the initial location of parcels are defined. Parcels are randomly generated around a 3D location given by the triplet ``(latitude,lonngitude,altitude)``. Notice that this is not the only way to initialize the parels. See utility ``erthcare_particles.py`` below for another way to sample particles based on lidar backscatter.
-  * ``Trajectories:`` controls the calculation of the trajectories: duration and other configuration parameters need by the C++ app. Examples includes the particular forecast cycle to be used, and which meteorological product to use (GEOSfp or IFS).
-    * ``Releases:`` here is where the initial date and partcular sites to start trajectories are defined. You can have multiple releases, each with its own starting date and fires.
+  * ``Fires:`` defines the sites where to launch trajectories from (refered to as **fires**, an INSPYRE bias). Probably this should be renamed ``Sites``.
+  * ``Parcels:`` where the initial location of parcels are defined. Parcels are randomly generated around a 3D location given by the triplet ``(latitude,longitude,altitude)``. Notice that this is not the only way to initialize the parcels. See utility ``erthcare_particles.py`` below for another way to sample particles based on lidar backscatter.
+  * ``Trajectories:`` controls the calculation of the trajectories: trajectory duration and other configuration parameters need by the C++ app. Examples includes the particular forecast cycle to be used, and which meteorological product to use (GEOS or IFS).
+    * ``Releases:`` here is where the initial date and particular sites to start trajectories are defined. You can have multiple releases, each with its own starting date and fires.
 
   * ``Plots:`` specific configuration for plotting (not used in main class ``GIGATRAJ``). Notice that there is an additional YAML file called ``inspyre.yaml`` where you can specify campaign specific aircrafts, range radii, and airports; this is particulalry important for configuring your plots during suitcase flights.
 
-- Meteorological data catalog needed by ``GigaTraj``. These are the configuration files specifying the file locations and variable names for driving the trajectory code. There are versions specific to GEOS and ECMWF IFS forecats:
-  * ``MetGEOS.cat:`` customization for GEOS at AWS, running on the parallel cluster (``pcluster``) associated with NASA's Airborne SMCE. 
+- Meteorological data catalog needed by ``GigaTraj``. These are the configuration files specifying the file locations and variable names for driving the trajectory code. There are versions specific to GEOS and ECMWF IFS forecasts:
+  * ``MetGEOS.cat:`` customization for GEOS at AWS, running on the parallel cluster ``(pcluster)`` associated with NASA's Airborne SMCE. 
   * ``MetIFS.cat:`` corresponding custorization for IFS forecasts
   * ``MetGEOSfp.cat:`` this is the generic name expected by the ``GigaTraj`` C++ application. Although you should be able to specifiy the name of the catalog on the command line, I could never get it to work. As a stop gap measure, this file is symlink'ed to ``MetGEOS.cat`` or ``MetIFS.cat`` when running with each of those meteorological fields.
 
 ## Other python supporting modules
 
-- ``earthcare.py:`` handy utility for finding EarthCARE orbits and frames. Useful when making simulations for EarthCARE orbits/frames as seen in [JAXA's EarthCARE Quick Looks](https://www.eorc.jaxa.jp/EARTHCARE/Quicklook).
+- ``earthcare.py:`` handy utility for finding EarthCARE orbits and frames. Useful when making simulations for EarthCARE orbits/frames as seen in [JAXA's EarthCARE Quick Looks](https://www.eorc.jaxa.jp/EARTHCARE/Quicklook). See this [Notebook](https://github.com/Asticou-Earth/AeroApps/blob/develop/src/Components/missions/INSPYRE/Notebooks/Sat_plane.ipynb) for an example.
 - ``earthcare_particles.py:`` utility for generating particle initial conditions based on Quick Look images. This code will eventually have an option to work with Level 2 HDF-5 as well. See this [Notebook](https://github.com/Asticou-Earth/AeroApps/blob/develop/src/Components/missions/INSPYRE/Notebooks/earthcare_particles_example.ipynb) for an example.
 - ``sat_plane.py:`` utility to find the intersection of trajectories with specific EarthCARE orbit/frame. See this [Notebook](https://github.com/Asticou-Earth/AeroApps/blob/develop/src/Components/missions/INSPYRE/Notebooks/Sat_plane.ipynb) for an example.
-- ``sat_tracks.py:`` this is a refactoring of module ``satellite_groundtracks``. For a set of satellites built in (easiky extendible if you know the NORAD catalog number for the bird), it can download Two-Line Element (TLE) files and compute the satellite ground tracks given a time sequence,
-- ``traj_plot.py:`` this is the workhorse for plotting the trajectories on a map. This is a refactoring of ``traj_make_plot.py`` and ``plot_parcel_forecast_density.py``  to remove file I/O and hardwired file name conventions. It now only includes the basic plotting functionality.
+- ``sat_tracks.py:`` this is a refactoring of module ``satellite_groundtracks``. For a set of satellites, built in (easily extended if you know the NORAD catalog number for the bird), it can download Two-Line Element (TLE) files and compute the satellite ground tracks given a time sequence.
+- ``traj_plot.py:`` this is the workhorse for plotting the trajectories on a map based on ``cartopy.`` This is a refactoring of ``traj_make_plot.py`` and ``plot_parcel_forecast_density.py``  to remove file I/O and hardwired file name conventions. Now it only includes the basic plotting functionality.
 
 ## Driving scripts used during INSPYRE 
 
@@ -50,13 +50,16 @@ Please note that ``GigaTraj`` is not a general Lagrangian transport model. It do
 
 ## Generic download scripts
 
-These scripts are needed when running on AWS. On Discover, the GEOS files are already present on disk. However, IFS files are not and they will need to be downloaded.
+These scripts are needed for downloading the necessary meteorological data when running on AWS. On Discover, the GEOS files are already present on disk and no data download is needed. However, IFS files are not routnely available on Discover and they will need to be downloaded.
 
 - ``download_url:`` generic script for downloading files from an URL with options to skip some files and limit the number of files to download.
 
 - ``download_fp:`` download GEOS-FP forecasts from NCCS
-- ``download_ifs:`` download IFS forecasts from ECMWF; it also symlinks the analysis directory (``diag/``) to enable calculation of trajectories released before the forecast initial time. This script downloads GRIB2 files from ECMWF and convert them to be GEOS-like NetCDF files using CDO and NCO utilities.
+
 - ``download_ana:`` download GEOS assimilation fields
+
+- ``download_ifs:`` download IFS forecasts from ECMWF; it also symlinks files in the analysis directory ``(diag/)`` to enable calculation of trajectories released before the forecast initial time. This script downloads GRIB2 files from ECMWF and convert them to be GEOS-like NetCDF files using CDO and NCO utilities. These utilities can be installed from ``conda-forge.``
+
 
 ## Python Environment
 Python dependencies can be foundn in ``environment.yaml``. To create a dedicated conda environment do this:
